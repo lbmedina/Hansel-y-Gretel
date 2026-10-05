@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sendero en el bosque</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e9f1ea;--card:#fff;--ink:#1c2e2a;--soft:#4b6159;--line:#c5d6c9;--moss:#3f7a4f;--candy:#d63f78;--candyink:#fff;--gold:#f2c14e;--ok:#2e7d46;--warn:#b4531a;--tile:#f7e4b8;--tileink:#4a3210}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14262b;--card:#1d363c;--ink:#eaf3ee;--soft:#a5bfb5;--line:#2f4f55;--moss:#7fcf93;--candy:#ef6a9a;--candyink:#1c1020;--ok:#7fcf93;--warn:#f0a36b;--tile:#e9cf94;--tileink:#33220a}}
+:root[data-theme="dark"]{--bg:#14262b;--card:#1d363c;--ink:#eaf3ee;--soft:#a5bfb5;--line:#2f4f55;--moss:#7fcf93;--candy:#ef6a9a;--candyink:#1c1020;--ok:#7fcf93;--warn:#f0a36b;--tile:#e9cf94;--tileink:#33220a}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Fredoka','Trebuchet MS',Arial,sans-serif;font-size:19px;line-height:1.45;text-transform:uppercase}
+main{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:2rem;margin:.2em 0;line-height:1.1}
+h2{font-size:1.35rem;margin:.2em 0 .5em}
+p{margin:.4em 0}
+.soft{color:var(--soft);font-size:.9rem}
+button{font:inherit;text-transform:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 18px;background:var(--moss);color:#fff;font-weight:600}
+button.alt{background:transparent;color:var(--ink);border:2px solid var(--line)}
+button.pink{background:var(--candy);color:var(--candyink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.map{position:relative;margin:14px 0;padding:6px 0 6px 28px;border-left:6px dotted var(--moss)}
+.stop{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);color:var(--ink);border:2px solid var(--line);margin:0 0 14px;position:relative}
+.stop:before{content:"";position:absolute;left:-41px;top:50%;width:20px;height:20px;margin-top:-10px;border-radius:50%;background:var(--moss);border:4px solid var(--bg)}
+.stop.done:before{background:var(--gold)}
+.stop.lock{opacity:.5;cursor:default}
+.stop.lock:before{background:var(--line)}
+.stop b{display:block}
+.emoji{font-size:1.8rem}
+textarea,input[type=text]{width:100%;font:inherit;text-transform:inherit;padding:10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+label{display:block;font-weight:600;margin:12px 0 4px}
+.help{background:var(--bg);border-left:6px solid var(--gold);border-radius:8px;padding:8px 12px;margin:8px 0}
+.model{background:var(--bg);border:2px dashed var(--moss);border-radius:12px;padding:10px 12px;margin:8px 0}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.slots,.tiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;min-height:58px}
+.slot,.tile{width:50px;height:58px;border-radius:12px;font-size:1.6rem;font-weight:600;display:grid;place-items:center;padding:0}
+.slot{background:var(--bg);border:3px dashed var(--line);color:var(--ink)}
+.slot.f{border-style:solid;border-color:var(--moss);background:var(--card)}
+.slot.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.slot.lockd{border-color:var(--gold)}
+.tile{background:var(--tile);color:var(--tileink);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.tile.used{visibility:hidden}
+.msg{font-weight:600;margin:8px 0}
+.msg.ok{color:var(--ok)}.msg.no{color:var(--warn)}
+.chk label{font-weight:400;display:flex;gap:10px;align-items:flex-start;margin:6px 0}
+.chk input{width:24px;height:24px;margin-top:2px;flex:none}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--moss);transition:width .3s}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+td,th{border:2px solid var(--line);padding:6px;vertical-align:top;text-align:left}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const state={done:{},cuadro:[]};
+try{const s=JSON.parse(localStorage.getItem('sendero')||'null');if(s)Object.assign(state,s);}catch(e){}
+const save=()=>{try{localStorage.setItem('sendero',JSON.stringify(state));}catch(e){}};
+const say=t=>{try{const u=new SpeechSynthesisUtterance(t);u.lang='es-AR';u.rate=.7;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}};
+const mix=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+
+/* ---------- DATOS ---------- */
+const ENGANOS=[
+ {titulo:'EL PRIMER ENGAÑO DE HANSEL',quien:'HANSEL AL PADRE',
+  ayudas:['ES LA PRIMERA VEZ QUE CAMINAN HACIA EL BOSQUE. BUSCÁ AL PRINCIPIO DEL CUENTO.',
+          'ESTÁ DESPUÉS DE LA IMAGEN DONDE HANSEL MIRA HACIA ATRÁS. BUSCÁ EN LA PÁGINA 4.',
+          'EL PADRE PREGUNTA: «¿POR QUÉ TE QUEDAS ATRÁS?». LEÉ LO QUE RESPONDE HANSEL.',
+          'HANSEL DICE QUE MIRA A SU GATITO... ¿DE QUÉ COLOR? ¿DÓNDE ESTÁ?'],
+  dijo:'MIRO A MI GATITO BLANCO QUE ESTÁ SOBRE EL TECHO Y QUIERE DECIRME ADIÓS.',
+  para:'EN REALIDAD, ECHABA GUIJARROS EN EL CAMINO PARA PODER VOLVER A CASA. SI DECÍA LA VERDAD, LO IMPEDIRÍAN.'},
+ {titulo:'EL SEGUNDO ENGAÑO DE HANSEL',quien:'HANSEL AL PADRE',
+  ayudas:['ES LA SEGUNDA VEZ QUE LOS LLEVAN AL BOSQUE. ESTA PARTE NO TIENE IMAGEN.',
+          'BUSCÁ EN LA PÁGINA 6, DESPUÉS DE QUE LA MUJER CIERRA LA PUERTA CON LLAVE.',
+          'EL PADRE PREGUNTA: «¿POR QUÉ TE DETIENES?». LEÉ LO QUE CONTESTA HANSEL.',
+          'ESTA VEZ HANSEL NO HABLA DE UN GATITO. DICE QUE MIRA A SU PALOMITA.'],
+  dijo:'MIRO LA PALOMITA QUE ESTÁ EN EL TECHO Y QUIERE DECIRME ADIÓS.',
+  para:'EN REALIDAD, IBA ECHANDO MIGAS DE PAN AL SUELO PARA MARCAR EL CAMINO.'},
+ {titulo:'EL ENGAÑO DE GRETEL A LA BRUJA',quien:'GRETEL A LA BRUJA',
+  ayudas:['ESTÁ CERCA DEL FINAL, CUANDO LA BRUJA QUIERE COMER A GRETEL.',
+          'BUSCÁ EN LA PÁGINA 10. LA BRUJA ESTÁ DELANTE DEL HORNO.',
+          'GRETEL DICE ALGO SOBRE EL HORNO. LA BRUJA LE RESPONDE «¡QUÉ NIÑA TONTA!».',
+          'GRETEL DICE «NO SÉ CÓMO...». ¿CÓMO SIGUE?'],
+  dijo:'NO SÉ CÓMO ENCENDER EL HORNO.',
+  para:'GRETEL SE DIO CUENTA DE QUE LA BRUJA QUERÍA ASARLA. FINGIÓ NO SABER PARA QUE LA BRUJA SE ASOMARA AL HORNO Y PODER EMPUJARLA.'}
+];
+const PALABRAS=[
+ {w:'BRUJA',pista:'ES LA DUEÑA DE LA CASITA DE DULCES. TIENE 2 SÍLABAS.'},
+ {w:'GRETEL',pista:'ES LA HERMANITA DE HANSEL. TIENE 2 SÍLABAS.'},
+ {w:'PADRE',pista:'ES EL LEÑADOR. TIENE 2 SÍLABAS.'},
+ {w:'BOSQUE',pista:'ES EL LUGAR DONDE SE PIERDEN LOS HERMANOS. TIENE 2 SÍLABAS.'},
+ {w:'CRUZAMOS',pista:'EN OTRA VERSIÓN, LOS HERMANOS ___ EL RÍO. SE ESCRIBE CON Z.'},
+ {w:'MADRASTRA',pista:'ES LA ESPOSA DEL LEÑADOR. TIENE 3 SÍLABAS.'}
+];
+
+/* ---------- MAPA ---------- */
+function home(){
+ const E=[
+  ['🏠','LA CASA DEL LEÑADOR','LOS ENGAÑOS DE HANSEL Y GRETEL','enganos'],
+  ['🪨','EL CAMINO DE GUIJARROS','ORDENÁ LAS LETRAS','letras'],
+  ['🌲','EL CORAZÓN DEL BOSQUE','PRÓXIMAMENTE',null],
+  ['🍬','LA CASITA DE DULCES','PRÓXIMAMENTE',null],
+  ['🔥','EL HORNO','PRÓXIMAMENTE',null],
+  ['🦆','EL REGRESO','PRÓXIMAMENTE',null]];
+ const n=Object.keys(state.done).length;
+ app.innerHTML=`<div class="top"><span class="soft">3.° AÑO · PRÁCTICAS DEL LENGUAJE</span><button class="alt" id="tema">🌓</button></div>
+ <h1>SENDERO EN EL BOSQUE</h1>
+ <p>RECORRÉ EL BOSQUE DE HANSEL Y GRETEL. ELEGÍ UNA ESTACIÓN.</p>
+ <div class="bar"><i style="width:${Math.round(n/2*100)}%"></i></div>
+ <div class="map">${E.map(e=>`<button class="stop ${e[3]?(state.done[e[3]]?'done':''):'lock'}" ${e[3]?`data-go="${e[3]}"`:'disabled'}><span class="emoji">${e[0]}</span><span><b>${e[1]}</b><span class="soft">${e[2]}${state.done[e[3]]?' · ¡LISTA!':''}</span></span></button>`).join('')}</div>
+ <p class="soft">ANTES DE JUGAR, LEÉ EL CUENTO CON TU SEÑO O SEÑO Y CONVERSEN SOBRE ÉL.</p>`;
+ app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>({enganos,letras}[b.dataset.go]()));
+ $('#tema').onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue('--bg').trim()==='#14262b';r.dataset.theme=d?'light':'dark';};
+}
+
+/* ---------- ESTACIÓN: ENGAÑOS ---------- */
+function enganos(i=0,fase='buscar',h=0){
+ if(i>=ENGANOS.length)return finEnganos();
+ const e=ENGANOS[i];
+ const cab=`<div class="top"><button class="alt" id="volver">← MAPA</button><span class="soft">ENGAÑO ${i+1} DE ${ENGANOS.length}</span></div><h2>${e.titulo}</h2>`;
+ if(fase==='buscar'){
+  app.innerHTML=cab+`<div class="card"><p>BUSCÁ EN EL CUENTO LA PARTE EN QUE ENGAÑA <b>${e.quien}</b>. LEÉ QUÉ DICE EXACTAMENTE.</p>
+  ${e.ayudas.slice(0,h).map(a=>`<div class="help">💡 ${a}</div>`).join('')}
+  <div class="row"><button class="alt" id="ayuda" ${h>=e.ayudas.length?'disabled':''}>NECESITO UNA AYUDA</button><button id="sig">YA LA LEÍ →</button></div></div>`;
+  $('#ayuda').onclick=()=>enganos(i,'buscar',h+1);
+  $('#sig').onclick=()=>enganos(i,'escribir',h);
+ }else if(fase==='escribir'){
+  app.innerHTML=cab+`<div class="card"><label for="d">¿QUÉ DIJO PARA ENGAÑAR?</label><textarea id="d" placeholder="ESCRIBÍ LO QUE DICE EL PERSONAJE"></textarea>
+  <label for="p">¿POR QUÉ NO DIJO LA VERDAD?</label><textarea id="p" placeholder="ESCRIBÍ SUS RAZONES"></textarea>
+  <div class="row"><button id="cmp">COMPARAR CON EL CUENTO</button></div></div>`;
+  $('#cmp').onclick=()=>{state.cuadro[i]={quien:e.quien,dijo:$('#d').value.trim(),para:$('#p').value.trim()};save();enganos(i,'comparar');};
+ }else{
+  const c=state.cuadro[i]||{};
+  app.innerHTML=cab+`<div class="card"><p><b>VOS ESCRIBISTE:</b></p><p>«${esc(c.dijo||'(SIN ESCRIBIR)')}»</p><p>${esc(c.para||'')}</p>
+  <p><b>EN EL CUENTO DICE:</b></p><div class="model">«${e.dijo}»</div><div class="model">${e.para}</div>
+  <p>MUY IMPORTANTE: NO TIENEN QUE SER IGUALES. FIJATE SI SE PARECEN.</p>
+  <div class="chk"><label><input type="checkbox"> ¿SE ENTIENDE LO QUE ESCRIBÍ?</label><label><input type="checkbox"> ¿DIJE QUIÉN ENGAÑA A QUIÉN?</label><label><input type="checkbox"> ¿LEÍ SI FALTA ALGUNA LETRA?</label></div>
+  <div class="row"><button class="alt" id="cor">CORREGIR MI TEXTO</button><button id="nx">SIGUIENTE →</button></div></div>`;
+  $('#cor').onclick=()=>enganos(i,'escribir');
+  $('#nx').onclick=()=>enganos(i+1);
+ }
+ $('#volver').onclick=home;
+}
+function finEnganos(){
+ state.done.enganos=1;save();
+ app.innerHTML=`<div class="top"><button class="alt" id="volver">← MAPA</button></div><h1>🎉 ¡ESTACIÓN COMPLETA!</h1><p>ESTE ES TU CUADRO DE ENGAÑOS. SE PUEDE COMPARTIR CON LA O EL DOCENTE.</p>
+ <div class="card" style="overflow-x:auto"><table><tr><th>QUIÉN</th><th>QUÉ DICE</th><th>POR QUÉ</th></tr>${state.cuadro.map(c=>`<tr><td>${esc(c.quien)}</td><td>${esc(c.dijo)}</td><td>${esc(c.para)}</td></tr>`).join('')}</table></div>
+ <div class="row"><button id="cp">COPIAR MI CUADRO</button><button class="alt" id="mapa">SEGUIR EL SENDERO</button></div><p class="msg" id="m"></p>`;
+ $('#volver').onclick=$('#mapa').onclick=home;
+ $('#cp').onclick=async()=>{const t=state.cuadro.map(c=>`${c.quien}\nDICE: ${c.dijo}\nPORQUE: ${c.para}`).join('\n\n');
+  try{await navigator.clipboard.writeText(t);$('#m').textContent='¡COPIADO!';}catch(e){$('#m').textContent='NO SE PUDO COPIAR. PEDÍ AYUDA A TU SEÑO O SEÑO.';}};
+}
+
+/* ---------- ESTACIÓN: LETRAS ---------- */
+function letras(i=0,aciertos=0){
+ if(i>=PALABRAS.length){state.done.letras=1;save();
+  app.innerHTML=`<div class="top"><button class="alt" id="v">← MAPA</button></div><h1>🎉 ¡LLEGASTE A CASA!</h1><p>ORDENASTE ${PALABRAS.length} PALABRAS DEL CUENTO.</p><button id="v2">SEGUIR EL SENDERO</button>`;
+  $('#v').onclick=$('#v2').onclick=home;return;}
+ const P=PALABRAS[i],W=P.w,n=W.length;
+ let slots=Array(n).fill(null),fixed=Array(n).fill(false),ayuda=0,intentos=0;
+ let tiles=mix(W.split('').map((c,k)=>({c,id:k})));
+ if(tiles.map(t=>t.c).join('')===W)tiles.reverse();
+ app.innerHTML=`<div class="top"><button class="alt" id="v">← MAPA</button><span class="soft">PALABRA ${i+1} DE ${PALABRAS.length}</span></div>
+ <h2>ORDENÁ TODAS LAS LETRAS</h2><p>ESCRIBÍ UNA PALABRA DEL CUENTO. TENÉS QUE USAR TODAS LAS LETRAS, SIN QUE SOBRE NINGUNA.</p>
+ <div class="card"><div class="slots" id="sl"></div><div class="tiles" id="tl"></div>
+ <div class="msg" id="ms"></div><div id="hp"></div>
+ <div class="row"><button class="alt" id="oir">🔊 LEER DESPACITO</button><button class="alt" id="ay">AYUDA</button><button id="ch" disabled>REVISAR</button></div></div>`;
+ const ms=$('#ms');
+ const draw=()=>{
+  $('#sl').innerHTML=slots.map((s,k)=>`<button class="slot ${s!==null?'f':''} ${fixed[k]?'lockd':''}" data-s="${k}" aria-label="LUGAR ${k+1}">${s!==null?tiles[s].c:''}</button>`).join('');
+  $('#tl').innerHTML=tiles.map((t,k)=>`<button class="tile ${slots.includes(k)?'used':''}" data-t="${k}">${t.c}</button>`).join('');
+  $('#ch').disabled=slots.includes(null);
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const p=slots.indexOf(null);if(p>-1){slots[p]=+b.dataset.t;ms.textContent='';draw();}});
+  document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const k=+b.dataset.s;if(!fixed[k]&&slots[k]!==null){slots[k]=null;draw();}});
+ };
+ draw();
+ $('#v').onclick=home;
+ $('#oir').onclick=()=>{const s=slots.map(x=>x===null?'':tiles[x].c).join('');say(s||'ARMÁ LA PALABRA');};
+ $('#ay').onclick=()=>{ayuda++;const hp=$('#hp');
+  if(ayuda===1)hp.innerHTML=`<div class="help">💡 ${P.pista}</div>`;
+  else if(ayuda===2){const k=0;const idx=tiles.findIndex(t=>t.c===W[0]);slots=Array(n).fill(null);fixed=Array(n).fill(false);slots[0]=idx;fixed[0]=true;hp.innerHTML=`<div class="help">💡 EMPIEZA CON LA LETRA ${W[0]}. YA LA PUSE EN SU LUGAR.</div>`;draw();}
+  else{ms.className='msg no';ms.textContent='MIRÁ CÓMO SE ESCRIBE: '+W+'. AHORA ARMALA VOS.';say(W);}
+ };
+ $('#ch').onclick=()=>{
+  const arm=slots.map(x=>tiles[x].c).join('');
+  if(arm===W){ms.className='msg ok';ms.textContent='¡MUY BIEN! ESCRIBISTE '+W+'.';
+   document.querySelectorAll('.slot').forEach(s=>s.classList.add('ok'));say(W);
+   $('#ch').textContent='SIGUIENTE →';$('#ch').onclick=()=>letras(i+1,aciertos+1);
+  }else{intentos++;
+   const bien=[...arm].filter((c,k)=>c===W[k]).length;
+   ms.className='msg no';
+   ms.textContent=`USASTE TODAS LAS LETRAS, PERO EL ORDEN NO ES EL CORRECTO. HAY ${bien} EN SU LUGAR. LEÉ DESPACITO Y PROBÁ DE NUEVO.`;
+   slots=slots.map((s,k)=>fixed[k]?s:null);draw();}
+ };
+}
+home();
+</script>
+</body>
+</html>
