@@ -207,3 +207,88 @@ home();
 </script>
 </body>
 </html>
+/* ---------- COMUNES ---------- */
+const cab=(t,s='')=>`<div class="top"><button class="alt" id="volver">← MAPA</button><span class="soft">${s}</span></div><h2>${t}</h2>`;
+const chk=a=>`<div class="chk">${a.map(x=>`<label><input type="checkbox"> ${x}</label>`).join('')}</div>`;
+const SEL='style="font:inherit;padding:8px;width:100%;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)"';
+function fin(k,t){state.done[k]=1;save();app.innerHTML=cab('🎉 ¡ESTACIÓN COMPLETA!')+`<p>${t}</p><div class="row"><button id="mp">SEGUIR EL SENDERO</button></div>`;$('#volver').onclick=$('#mp').onclick=home;}
+
+/* ---------- ESTACIÓN: CORAZÓN DEL BOSQUE ---------- */
+const BOSQUE=[
+ {f:'«AL HOMBRE SE LE CONTRAJO EL CORAZÓN DE PENA»',o:['LE DOLIÓ EL CORAZÓN Y FUE AL MÉDICO','SINTIÓ MUCHA TRISTEZA Y ANGUSTIA','SE PUSO CONTENTO'],c:1,e:'EL NARRADOR NOS CUENTA CUÁNTA PENA SINTIÓ EL PADRE SIN DECIRLO DIRECTAMENTE.'},
+ {f:'«CAMINARON Y CAMINARON»',o:['CAMINARON UN RATITO','CAMINARON MUCHO TIEMPO','CAMINARON DOS VECES'],c:1,e:'REPETIR EL VERBO NOS HACE SENTIR QUE LA CAMINATA DURÓ MUCHO.'},
+ {f:'«LOS GUIJARROS RESPLANDECÍAN COMO MONEDAS»',o:['BRILLABAN, IGUAL QUE LAS MONEDAS','ERAN MONEDAS DE VERDAD','ESTABAN SUCIOS'],c:0,e:'SE COMPARAN CON MONEDAS PORQUE LOS DOS BRILLAN.'},
+ {f:'«LA VIEJA, CON SUS OJOS SIN LUZ»',o:['TENÍA LOS OJOS BRILLANTES','TENÍA LOS OJOS APAGADOS: VEÍA POCO','NO TENÍA OJOS'],c:1,e:'LA BRUJA ERA CORTA DE VISTA Y POR ESO NO NOTÓ EL ENGAÑO DEL HUESITO.'}];
+function bosque(i=0){
+ if(i>=BOSQUE.length){
+  app.innerHTML=cab('AHORA INVENTÁ VOS')+`<div class="card"><label for="a">EL PAJARITO ERA BLANCO COMO...</label><input type="text" id="a"><label for="b">LAS PIEDRAS BRILLABAN COMO...</label><input type="text" id="b"><div class="row"><button id="ok">LISTO</button></div></div>`;
+  $('#volver').onclick=home;$('#ok').onclick=()=>{state.comp=[$('#a').value,$('#b').value];fin('bosque','AHORA RECONOCÉS CÓMO CUENTA EL NARRADOR SIN DECIRLO TODO DIRECTAMENTE.');};return;}
+ const q=BOSQUE[i];
+ app.innerHTML=cab('EL CORAZÓN DEL BOSQUE',`${i+1} DE ${BOSQUE.length}`)+`<div class="card"><p>EL NARRADOR DICE:</p><div class="model">${q.f}</div><p>¿QUÉ NOS QUIERE DECIR?</p>${q.o.map((o,k)=>`<button class="alt" style="display:block;width:100%;text-align:left;margin:8px 0" data-k="${k}">${o}</button>`).join('')}<div class="msg" id="ms"></div></div>`;
+ $('#volver').onclick=home;
+ document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const ms=$('#ms');
+  if(+b.dataset.k===q.c){ms.className='msg ok';ms.innerHTML=`¡ESO! ${q.e}<div class="row"><button id="nx">SIGUIENTE →</button></div>`;$('#nx').onclick=()=>bosque(i+1);}
+  else{ms.className='msg no';ms.textContent='RELEÉ LA FRASE Y PENSALO DE NUEVO.';}});
+}
+
+/* ---------- ESTACIÓN: CASITA DE DULCES ---------- */
+function casita(f='a'){
+ if(f==='a'){
+  const P=[['TECHO','TARTA'],['PAREDES','GALLETITAS'],['VENTANAS','CARAMELO']],O=['TARTA','GALLETITAS','CARAMELO','CHOCOLATE','TURRÓN'];
+  app.innerHTML=cab('LA CASITA DE DULCES','PARTE 1')+`<div class="card"><p>BUSCÁ EN EL CUENTO (PÁGINA 7) DE QUÉ ESTÁ HECHA CADA PARTE.</p>${P.map((p,k)=>`<label for="s${k}">${p[0]}</label><select id="s${k}" ${SEL}><option value="">ELEGÍ...</option>${O.map(o=>`<option>${o}</option>`).join('')}</select>`).join('')}<div class="msg" id="ms"></div><div class="row"><button id="ch">REVISAR</button></div></div>`;
+  $('#volver').onclick=home;
+  $('#ch').onclick=()=>{const b=P.filter((p,k)=>$('#s'+k).value===p[1]).length,ms=$('#ms');
+   if(b===3){ms.className='msg ok';ms.innerHTML='¡LAS TRES ESTÁN BIEN!<div class="row"><button id="nx">AMPLIAR LA DESCRIPCIÓN →</button></div>';$('#nx').onclick=()=>casita('b');}
+   else{ms.className='msg no';ms.textContent=`HAY ${b} BIEN DE 3. VOLVÉ A LEER LA PÁGINA 7.`;}};
+ }else{
+  const B=['LA PUERTA ERA DE UN ENORME Y MACIZO CHOCOLATE','EL TECHO DE PEQUEÑAS PASTILLAS BRILLABA COMO ESPEJOS DE COLORES','UN AROMA A DULCES INVADÍA EL BOSQUE','EN EL JARDÍN HABÍA CHUPETINES COMO SI FUERAN FLORES'];
+  app.innerHTML=cab('LA CASITA DE DULCES','PARTE 2')+`<div class="card"><p>AMPLIÁ LA DESCRIPCIÓN PARA QUE LA CASITA SEA TENTADORA: ES UNA TRAMPA PARA ATRAER A LOS NIÑOS.</p><p class="soft">TOCÁ UNA FRASE PARA AGREGARLA, O ESCRIBÍ LAS TUYAS:</p><div class="row">${B.map((b,k)=>`<button class="alt" data-b="${k}" style="font-size:.8rem">${b}</button>`).join('')}</div>
+  <textarea id="t" style="min-height:160px;margin-top:12px">EL PÁJARO BLANCO VOLÓ Y VOLÓ Y LOS PEQUEÑOS LO SIGUIERON HASTA QUE SE DETUVO EN EL TECHO DE UNA EXTRAÑA CASITA… </textarea>
+  <div class="msg" id="ms"></div>${chk(['¿SE NOTA QUE LA CASITA ES MUY TENTADORA?','¿DESCRIBÍ COLOR, FORMA O AROMA?','¿FALTA ALGUNA LETRA?'])}<div class="row"><button class="alt" id="rv">REVISAR REPETICIONES</button><button id="ok">LISTO</button></div></div>`;
+  $('#volver').onclick=home;
+  document.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{$('#t').value+=B[+b.dataset.b]+'. ';});
+  $('#rv').onclick=()=>{const t=$('#t').value.toUpperCase(),y=(t.match(/\bY\b/g)||[]).length,h=(t.match(/\bTEN[ÍI]A\b/g)||[]).length,ms=$('#ms');ms.className='msg no';
+   ms.textContent=y>3?`USASTE «Y» ${y} VECES. ¿PODÉS REEMPLAZAR ALGUNA POR UN PUNTO O UNA COMA?`:h>2?`USASTE «TENÍA» ${h} VECES. ¿HAY OTRA FORMA DE DECIRLO?`:(ms.className='msg ok','NO ENCONTRÉ REPETICIONES. ¡BUEN TRABAJO!');};
+  $('#ok').onclick=()=>{state.casita=$('#t').value;fin('casita','TU DESCRIPCIÓN SE PUEDE INSERTAR EN EL CUENTO. COMPARTILA CON TU GRUPO.');};
+ }
+}
+
+/* ---------- ESTACIÓN: EL HORNO (GRETEL) ---------- */
+const GRETEL=['GRETEL LLORA CUANDO ESCUCHA EL PLAN DE LA MADRASTRA','GRETEL REPARTE SU PAN CON HANSEL EN EL BOSQUE','LA BRUJA OBLIGA A GRETEL A COCINAR PARA HANSEL','GRETEL DICE «NO SÉ CÓMO ENCENDER EL HORNO»','GRETEL EMPUJA A LA BRUJA Y LIBERA A HANSEL'];
+function horno(){
+ let ord=mix([0,1,2,3,4]);if(ord.join()==='0,1,2,3,4')ord.reverse();
+ const a=()=>{
+  app.innerHTML=cab('¿CÓMO CAMBIA GRETEL?','PARTE 1')+`<div class="card"><p>ORDENÁ LO QUE LE PASA A GRETEL, DE LO PRIMERO A LO ÚLTIMO.</p>${ord.map((o,k)=>`<div class="row" style="align-items:center;flex-wrap:nowrap"><button class="alt" data-u="${k}" aria-label="SUBIR">↑</button><button class="alt" data-d="${k}" aria-label="BAJAR">↓</button><span>${GRETEL[o]}</span></div>`).join('')}<div class="msg" id="ms"></div><div class="row"><button id="ch">REVISAR</button></div></div>`;
+  $('#volver').onclick=home;
+  const mv=(k,j)=>{if(j<0||j>4)return;[ord[k],ord[j]]=[ord[j],ord[k]];a();};
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>mv(+b.dataset.u,+b.dataset.u-1));
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>mv(+b.dataset.d,+b.dataset.d+1));
+  $('#ch').onclick=()=>{const b=ord.filter((o,k)=>o===k).length,ms=$('#ms');
+   if(b===5){ms.className='msg ok';ms.innerHTML='¡EN ORDEN!<div class="row"><button id="nx">SEGUIR →</button></div>';$('#nx').onclick=c;}
+   else{ms.className='msg no';ms.textContent=`HAY ${b} EN SU LUGAR. RELEÉ EL CUENTO: ¿QUÉ PASÓ ANTES?`;}};
+ };
+ const c=()=>{
+  const S=['TEMEROSA','VALIENTE','TRISTE','ASTUTA'];
+  app.innerHTML=cab('¿CÓMO CAMBIA GRETEL?','PARTE 2')+`<div class="card"><label for="x">AL PRINCIPIO GRETEL ERA...</label><select id="x" ${SEL}>${S.map(s=>`<option>${s}</option>`).join('')}</select><label for="y">AL FINAL GRETEL ERA...</label><select id="y" ${SEL}>${S.map(s=>`<option>${s}</option>`).join('')}</select><label for="w">¿QUÉ LA HIZO CAMBIAR? ESCRIBÍ QUÉ HIZO O DIJO PARA DARTE CUENTA.</label><textarea id="w"></textarea><div class="row"><button id="ok">LISTO</button></div></div>`;
+  $('#volver').onclick=home;$('#ok').onclick=()=>{state.gretel=[$('#x').value,$('#y').value,$('#w').value];fin('horno','GRETEL PASÓ DEL MIEDO A LA ASTUCIA Y LA VALENTÍA. ¡COMPARTÍ TU TEXTO CON TU GRUPO!');};
+ };
+ a();
+}
+
+/* ---------- ESTACIÓN: EL REGRESO ---------- */
+function regreso(f='a',q='GRETEL'){
+ if(f==='a'){
+  const Q=['¿QUÉ SE ENCUENTRAN LOS HERMANOS EN LA OTRA VERSIÓN, ANTES DE LLEGAR A CASA?','¿QUÉ LE DICE GRETEL AL PATO?','¿POR QUÉ ESTÁN CONTENTOS EN LAS DOS VERSIONES?'];
+  app.innerHTML=cab('EL REGRESO','COMPARAR FINALES')+`<div class="card"><p>LEÉ EL FINAL DEL CUENTO (PÁGINA 11) Y EL OTRO FINAL QUE TE DIO TU SEÑO O SEÑO. ENTRE LOS DOS, CONTESTÁ:</p>${Q.map((x,k)=>`<label for="q${k}">${x}</label><textarea id="q${k}"></textarea>`).join('')}<div class="row"><button id="nx">ESCRIBIR EL RELATO →</button></div></div>`;
+  $('#volver').onclick=home;$('#nx').onclick=()=>{state.finales=Q.map((x,k)=>$('#q'+k).value);save();regreso('b');};
+ }else{
+  const ini={GRETEL:'¡PAPÁ! ¡QUÉ SUERTE QUE ESTÁS AQUÍ! VOY A CONTARTE LO QUE NOS PASÓ EN EL BOSQUE. ',HANSEL:'¡POR FIN LLEGAMOS A CASA, PAPÁ! VOY A CONTARTE CÓMO GRETEL ME SALVÓ LA VIDA. '};
+  app.innerHTML=cab('EL REGRESO','RELATO')+`<div class="card"><p>CONTALE A TU PAPÁ LO QUE VIVIERON DESDE QUE LLEGARON A LA CASA DE LA BRUJA. ¿QUIÉN CUENTA?</p><div class="row"><button class="${q==='GRETEL'?'':'alt'}" id="g">GRETEL</button><button class="${q==='HANSEL'?'':'alt'}" id="h">HANSEL</button></div>
+  <p class="soft">NO TE OLVIDES DE: LA CASITA DE DULCES · LA VIEJITA QUE PARECÍA BUENA · EL CORRAL Y EL DEDITO · EL ENGAÑO DEL HORNO · EL TESORO Y EL REGRESO.</p>
+  <textarea id="t" style="min-height:200px">${ini[q]}</textarea>${chk(['¿CUENTO COMO '+q+' (YO, MI HERMANO)?','¿AHORA SÉ QUE ERA UNA BRUJA, AUNQUE ANTES NO LO SABÍA?','¿USÉ RAYAS DE DIÁLOGO PARA LAS VOCES?','¿PUSE PUNTO Y APARTE CUANDO EMPIEZA ALGO NUEVO?','¿FALTA ALGUNA LETRA?'])}<div class="msg" id="ms"></div><div class="row"><button class="alt" id="cp">COPIAR</button><button id="ok">LISTO</button></div></div>`;
+  $('#volver').onclick=home;
+  $('#g').onclick=()=>regreso('b','GRETEL');$('#h').onclick=()=>regreso('b','HANSEL');
+  $('#cp').onclick=async()=>{try{await navigator.clipboard.writeText($('#t').value);$('#ms').textContent='¡COPIADO!';}catch(e){$('#ms').textContent='NO SE PUDO COPIAR.';}};
+  $('#ok').onclick=()=>{state.relato=$('#t').value;fin('regreso','TU RELATO SE PUEDE REVISAR EN CLASE CON TU SEÑO O SEÑO.');};
+ }
+}
